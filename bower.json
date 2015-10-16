@@ -1,0 +1,42 @@
+{
+  "name": "t-table",
+  "version": "0.0.0",
+  "authors": [
+    "Rahul Pilkhwal <rahul.pilkhwal@tavisca.com>",
+    "Shailesh Kumar Srivastava <ssrivastava@tavisca.com>",
+    "Sounak Pal <spal@tavisca.com>",
+    "Ajinkya Tejankar <tejankarajinkya@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "keywords": [
+    "Polymer",
+    "Web",
+    "Components"
+  ],
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": { 
+    "iron-flex-layout": "PolymerElements/iron-flex-layout#^1.0.0",
+    "iron-ajax": "PolymerElements/iron-ajax#1.0.0",
+    "iron-collapse": "PolymerElements/iron-collapse#1.0.3",
+    "iron-input": "PolymerElements/iron-input#1.0.6",
+    "iron-media-query": "PolymerElements/iron-media-query#1.0.2",
+    "paper-spinner": "PolymerElements/paper-spinner#1.0.2",
+    "t-button": "atomproject/t-button#0.0.0",
+    "t-pagination": "atomproject/t-pagination#0.0.0", 
+    "polymer": "Polymer/polymer#^1.0.0"
+  },
+  "devDependencies": {
+    "webcomponentsjs": "~0.7.14",
+    "iron-component-page": "PolymerElements/iron-component-page#~1.0.6"
+  }
+}
