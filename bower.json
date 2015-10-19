@@ -31,8 +31,8 @@
     "iron-input": "PolymerElements/iron-input#1.0.6",
     "iron-media-query": "PolymerElements/iron-media-query#1.0.2",
     "paper-spinner": "PolymerElements/paper-spinner#1.0.2",
-    "t-button": "atomproject/t-button#0.0.0",
-    "t-pagination": "atomproject/t-pagination#0.0.0", 
+    "t-button": "atomelements/t-button#0.0.0",
+    "t-pagination": "atomelements/t-pagination#0.0.0", 
     "polymer": "Polymer/polymer#^1.0.0"
   },
   "devDependencies": {
