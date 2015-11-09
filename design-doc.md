@@ -1,5 +1,3 @@
-## Table 
-
 A table is an element used to display entries of structured data arranged in rows and columns. It is similar to the list in many of the functions it performs. The table can be populated with data in 4 ways — using an Excel Sheet, Google Sheet, Custom data entered by the user, or via an API based data source. Table includes the following functionality:
 
 * Searching
