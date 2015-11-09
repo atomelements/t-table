@@ -17,20 +17,20 @@ There are some features which have not yet been implemented:
 
 **1. Choice of data source**
 
-* Lets the user choose from where to get data to populate the table
+* Lets the user choose from where to get data to populate the table.
 * Shown as a pill button in the property panel.
 * Possible Values: ‘Excel’, ‘GSheet’, ‘Custom’, ‘API’.
 * Default Value: ‘GSheet’.
 
 ### Properties Exposed 
 
-**1. Sortable:**
+**1. Sortable**
 
 * Enables the sorting functionality & displays relevant controls in the list. The ‘Different header row’ property must be enabled for sorting controls to be visible.
 * Shown as a checkbox in the property panel.
 * Default Value: Checked.
 
-**2. Searchable:**
+**2. Searchable**
 
 * Enables the search functionality & displays relevant controls in the list.
 * Shown as a checkbox in the property panel.
@@ -38,7 +38,7 @@ There are some features which have not yet been implemented:
 
 **3. Different header row**
 
-* Displays a strip of colour in the first row. This property must be enabled for sorting controls to be visible. 
+* Displays a strip of colour in the first row. This property must be enabled for sorting controls to be visible.
 * Shown as a checkbox in the property panel.
 * Default Value: Checked.
 
