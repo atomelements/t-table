@@ -5,15 +5,15 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">   
     
-  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+	<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
   
 	<link rel="import" href="../t-table.html"/>
 	<link rel="import" href="../t-column.html"/> 
+	<link rel="import" href="../../t-shared-components/theme.html">
 </head>
 
 <body unresolved>
 	<div style="margin:10px">
-
 		<t-table id="rtable" banded-rows sortable searchable>
 			<t-column hide-on="tablet" data-value="fruit" display-value="Name"  column-template="test"></t-column>
 			<t-column hide-on="phone"  data-value="alice" display-value="Role"></t-column>
