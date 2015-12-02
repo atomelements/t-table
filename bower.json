@@ -33,11 +33,17 @@
     "paper-spinner": "PolymerElements/paper-spinner#1.0.2",
     "t-button": "atomelements/t-button#0.0.0",
     "t-pagination": "atomelements/t-pagination#0.0.0",
-    "polymer": "Polymer/polymer#^1.0.0"
+    "polymer": "Polymer/polymer#^1.0.0",
+    "iron-icon": "polymerelements/iron-icon#~1.0.7",
+    "iron-icons": "polymerelements/iron-icons#~1.0.5"
   },
   "devDependencies": {
     "webcomponentsjs": "~0.7.14",
     "iron-component-page": "PolymerElements/iron-component-page#~1.0.6",
     "t-shared-components": "atomelements/t-shared-components#~0.0.0"
+  },
+  "resolutions": {
+    "iron-icon": "~1.0.7",
+    "iron-icons": "~1.0.5"
   }
 }
