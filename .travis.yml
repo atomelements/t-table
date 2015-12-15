@@ -1,0 +1,18 @@
+language: node_js
+sudo: false
+cache:
+  directories:
+  - node_modules
+script: xvfb-run -a wct --simpleOutput -l firefox -l chrome
+addons:
+  firefox: latest
+  apt:
+    sources:
+    - google-chrome
+    packages:
+    - google-chrome-stable
+before_script:
+- npm install bower
+- npm install web-component-tester
+- export PATH=$PWD/node_modules/.bin:$PATH
+- bower install
