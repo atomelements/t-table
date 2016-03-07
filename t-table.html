@@ -112,7 +112,6 @@
         <iron-ajax id="populategridcall" url="{{dataUrl}}" handleAs="json" method="GET" on-response="_handleGetDataCallSuccess" on-error="handleGetDataCallFailure">
         </iron-ajax>
         <content id="tableformat" select="t-column"></content>
-        <content id="data" select="t-body"></content>
         <content id="templates" select="template"></content>
     </template>
     <script>
@@ -132,6 +131,15 @@
         },
 
         properties: {
+            /**
+             * The data to display in the table if it is not based on an api.
+             * The expected format of data is array of arrays.
+             * @type {Array}
+             */
+            seedData: {
+                type: Array,
+                observer: '_extractColumnHeaders'
+            },
 
             /**
              * Number of pages present in case of Api based data table.
@@ -155,6 +163,18 @@
             hasHeaderRow: {
                 type: Boolean,
                 value: true
+            },
+
+            /**
+             * Where to take the header names from if the table has
+             * to show headers. Either headers are provided in the
+             * markup or in `seedData`. The first value in the array
+             * (data) is treated as headers.
+             * @type {Boolean}
+             */
+            headersFromSeedData: {
+                type: Boolean,
+                value: false
             },
 
             /**
@@ -207,7 +227,7 @@
 
             _loading: {
                 type: Boolean,
-                value: true
+                value: false
             },
 
             _ignoreSort: {
@@ -332,25 +352,7 @@
             }
         },
 
-        _setColumnHeaders: function(elem) {
-            var table = this;
-            var hideOn = elem.hideOn;
-            var data = {
-                dataValue: elem.dataValue,
-                displayValue: elem.displayValue,
-                ignoreSort: this.ignoreSort(elem.ignoreSort),
-                isChildRow: elem.isChildRow,
-                columnTemplate: elem.columnTemplate,
-                action: elem.action,
-                isSorted: false
-            };
-            if (table.sortable && !(elem.ignoreSort || table._sortedByDefault)) {
-                table._sortedByDefault = true;
-                data.isSorted = true;
-                table._orderBy(elem.dataValue, true);
-            }
-            if (elem.isChildRow && !table._childRowsExists) table._childRowsExists =
-                true;
+        _getScreens: function(hideOn) {
             var screens = {
                 all: false,
                 smallerDevices: false,
@@ -358,36 +360,49 @@
                 tablet: false,
                 always: false
             };
+
             if (hideOn !== null && hideOn !== undefined) {
                 hideOn = hideOn.split(',');
+
                 if (hideOn.indexOf('all') !== -1) {
                     screens.all = true;
-                } else {
-                    if ((hideOn.indexOf('phone') !== -1 && hideOn.indexOf('tablet') !== -1)) {
-                        screens.smallerDevices = true;
-                    } else {
-                        if (hideOn.indexOf('phone') !== -1) {
-                            screens.phone = true;
-                        } else {
-                            if (hideOn.indexOf('tablet') !== -1) {
-                                screens.tablet = true;
-                            }
-                        }
-                    }
+                } else if (hideOn.indexOf('phone') !== -1 && hideOn.indexOf('tablet') !== -1) {
+                    screens.smallerDevices = true;
+                } else if (hideOn.indexOf('phone') !== -1) {
+                    screens.phone = true;
+                } else if (hideOn.indexOf('tablet') !== -1) {
+                    screens.tablet = true;
                 }
             } else {
                 screens.always = true;
             }
-            table.push('_columnHeaders', {
-                key: data.dataValue,
-                value: data.displayValue,
-                hideOn: screens,
-                ignoreSort: data.ignoreSort,
-                isChildRow: data.isChildRow,
-                columnTemplate: data.columnTemplate,
-                action: data.action,
-                isSorted: data.isSorted
-            });
+
+            return screens;
+        },
+
+        _setColumnHeaders: function(elem) {
+            var data = {
+                key: elem.dataValue,
+                value: elem.displayValue,
+                hideOn: this._getScreens(elem.hideOn),
+                ignoreSort: this.ignoreSort(elem.ignoreSort),
+                isChildRow: elem.isChildRow,
+                columnTemplate: elem.columnTemplate,
+                action: elem.action,
+                isSorted: elem.isSorted
+            };
+
+            if (this.sortable && !(elem.ignoreSort || this._sortedByDefault)) {
+                this._sortedByDefault = true;
+                data.isSorted = true;
+                this._orderBy(elem.dataValue, true);
+            }
+
+            if (elem.isChildRow && !this._childRowsExists) {
+                this._childRowsExists = true;
+            }
+
+            this.push('_columnHeaders', data);
         },
 
         _getColumnData: function(value) {
@@ -562,32 +577,73 @@
         },
 
         _domReady: function() {
-            this._parseTableStructure();
+            this._attachedHit = true;
+            this._extractColumnHeaders();
             this._removeTableStructure();
-            if (this._dataRows.length === 0) {
-                this._isProcessing = true;
-                this._loading = true;
-            }
             if (this.apiBased) {
                 this.reload();
+
+                if (this._dataRows.length === 0) {
+                    this._isProcessing = true;
+                    this._loading = true;
+                }
             }
-            this._originalDataSet = this._dataRows;
         },
 
-        _parseTableStructure: function() {
-            this._columns = Polymer.dom(this.$.tableformat).getDistributedNodes();
-            var rows = this._columns;
-            var tableRows = [];
-            var templates = Polymer.dom(this.$.templates).getDistributedNodes();
-            for (i = 0; i < rows.length; i++) {
-                var elem = rows[i];
-                // this._appendTemplateInShadowDom(elem, templates);
-                this._setColumnHeaders(elem);
+        _extractColumnHeaders: function() {
+            var columns, tableRows, templates, elem;
+
+            if (!this._attachedHit) {
+                return;
             }
-            if (!this.apiBased) {
-                this._dataRows = JSON.parse(Polymer.dom(this.$.data).getDistributedNodes()[
-                    0].textContent);
+
+            columns = Polymer.dom(this.$.tableformat).getDistributedNodes();
+            columns = Array.prototype.slice.call(columns);
+            this._columnHeaders = [];
+
+            if (this.headersFromSeedData && this.seedData) {
+                this._columns = this.seedData.shift()
+                    .filter(function(colName) {
+                        return colName !== null && colName !== undefined;
+                    })
+                    .map(function(colName, i) {
+                        var column = columns.find(function(col) {
+                            var index = Number(col.dataValue);
+
+                            // TODO: col.done is a bad idea, use ES6 symbols
+                            return index === i && (col.done = true);
+                        });
+
+                        column = column || { dataValue: i };
+                        column.displayValue = colName;
+
+                        return column;
+                    });
+
+                columns.forEach(function(col, i) {
+                    if (!col.done) {
+                        this._columns.push(col);
+                    }
+
+                    col.done = undefined;
+                }.bind(this));
+            } else {
+                this._columns = columns;
             }
+
+            tableRows = [];
+            templates = Polymer.dom(this.$.templates).getDistributedNodes();
+
+            this._columns.forEach(function(col) {
+                // this._appendTemplateInShadowDom(col, templates);
+                this._setColumnHeaders(col);
+            }.bind(this));
+
+            if (!this.apiBased && this.seedData) {
+                this._dataRows = this.seedData;
+                this._originalDataSet = this._dataRows;
+            }
+
             this._rerenderTable();
         },
 
@@ -617,8 +673,7 @@
 
         _removeTableStructure: function() {
             var rows = this.querySelectorAll('t-column');
-            var element = this.querySelector('t-body');
-            if (element !== null) element.parentNode.removeChild(element);
+
             for (i = 0; i < rows.length; i++) {
                 rows[i].parentNode.removeChild(rows[i]);
             }

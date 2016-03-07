@@ -29,5 +29,13 @@
                 "value": false
             }
         }
+    }, {
+        "name": "Data",
+        "fields": {
+            "seedData": {
+                "name": "Table Data",
+                "type": "array"
+            }
+        }
     }]
 }
