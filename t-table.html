@@ -1,3 +1,5 @@
+<!-- TODO: this component is re-factored and tested to support only the seedData not api -->
+
 <link rel="import" href="../polymer/polymer.html" />
 <link rel="import" href="../iron-flex-layout/classes/iron-flex-layout.html" />
 <link rel="import" href="../iron-input/iron-input.html" />
@@ -177,7 +179,8 @@
              */
             firstRowAsHeaders: {
                 type: Boolean,
-                value: false
+                value: false,
+                observer: '_changeColumns'
             },
 
             /**
@@ -598,8 +601,8 @@
 
         _domReady: function() {
             this._attachedHit = true;
+            this._storeHtmlColumns();
             this._parseTableStructure();
-            this._removeTableStructure();
 
             if (this.apiBased) {
                 this.reload();
@@ -611,46 +614,88 @@
             }
         },
 
+        _storeHtmlColumns: function() {
+            var columns;
+
+            columns = Polymer.dom(this.$.tableformat).getDistributedNodes();
+            columns = Array.prototype.slice.call(columns);
+
+            this._htmlColumns = columns.map(function(col) {
+                return col.cloneState();
+            });
+
+            columns.forEach(function(col) {
+                col.parentNode.removeChild(col);
+            });
+        },
+
+        _getColumns: function(seedData) {
+            var htmlColumns = this._htmlColumns, columns;
+            var clone = function(val) {
+                return JSON.parse(JSON.stringify(val));
+            };
+
+            columns = (this._seedDataHeadersRow = seedData.shift())
+                .filter(function(colName) {
+                    return colName !== null && colName !== undefined;
+                })
+                .map(function(colName, i) {
+                    var column = htmlColumns.find(function(col) {
+                        var index = Number(col.dataValue);
+
+                        return index === i && (col.done = true);
+                    });
+
+                    column = column ? clone(column) : { dataValue: i };
+                    column.displayValue = colName;
+
+                    return column;
+                });
+
+            htmlColumns.forEach(function(col, i) {
+                if (!col.done) {
+                    columns.push(clone(col));
+                }
+
+                col.done = undefined;
+            }.bind(this));
+
+            return columns;
+        },
+
+        _changeColumns: function(newVal, oldVal) {
+            var seedData = this.seedData;
+
+            if (!this._attachedHit) {
+                return;
+            }
+
+            if (newVal && !oldVal && this.seedData) {
+                this.seedData = seedData.slice();
+            }
+            else if (!newVal && oldVal &&
+                    this.seedData && this._seedDataHeadersRow) {
+
+                seedData.unshift(this._seedDataHeadersRow);
+                this.seedData = seedData.slice();
+                this._seedDataHeadersRow = null;
+            }
+        },
+
         _parseTableStructure: function() {
-            var columns, tableRows, templates, elem;
+            var tableRows, templates, elem;
 
             if (!this._attachedHit) {
                 return;
             }
 
             try {
-                columns = Polymer.dom(this.$.tableformat).getDistributedNodes();
-                columns = Array.prototype.slice.call(columns);
                 this._columnHeaders = [];
 
                 if (this.firstRowAsHeaders && this.seedData) {
-                    this._columns = this.seedData.shift()
-                        .filter(function(colName) {
-                            return colName !== null && colName !== undefined;
-                        })
-                        .map(function(colName, i) {
-                            var column = columns.find(function(col) {
-                                var index = Number(col.dataValue);
-
-                                // TODO: col.done is a bad idea, use ES6 symbols
-                                return index === i && (col.done = true);
-                            });
-
-                            column = column || { dataValue: i };
-                            column.displayValue = colName;
-
-                            return column;
-                        });
-
-                    columns.forEach(function(col, i) {
-                        if (!col.done) {
-                            this._columns.push(col);
-                        }
-
-                        col.done = undefined;
-                    }.bind(this));
+                    this._columns = this._getColumns(this.seedData);
                 } else {
-                    this._columns = columns;
+                    this._columns = this._htmlColumns;
                 }
 
                 tableRows = [];
@@ -662,8 +707,7 @@
                 }.bind(this));
 
                 if (!this.apiBased && this.seedData) {
-                    this._dataRows = this.seedData;
-                    this._originalDataSet = this._dataRows;
+                    this._originalDataSet = this._dataRows = this.seedData;
                 }
 
                 this._rerenderTable();
@@ -697,14 +741,6 @@
             }
             this._isProcessing = false;
             this._loading = true;
-        },
-
-        _removeTableStructure: function() {
-            var rows = this.querySelectorAll('t-column');
-
-            for (i = 0; i < rows.length; i++) {
-                rows[i].parentNode.removeChild(rows[i]);
-            }
         },
 
         _handleSearchCallSuccess: function(e) {
@@ -847,6 +883,14 @@
         },
 
         _onPhone: function(e) {
+            // _currentScreen is not initialized to its default value by the
+            // current element since this function is invoked in response to
+            // an event generated by a child element. Now, all the
+            // child elements are made ready (lifecycle callbacks are hit)
+            // before the parent element and a child element may choose to raise
+            // an event during this period. The iron-media-query element does
+            // just that and hence the current function is called before current
+            // element has a chance to initialize _currentScreen property.
             this._currentScreen = this._currentScreen || {};
             this.set('_currentScreen.isPhone', e.detail.value);
             this._rerenderTable();

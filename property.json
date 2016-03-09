@@ -27,6 +27,11 @@
                 "name":"Hoverable Rows",
                 "type": "boolean",
                 "value": false
+            },
+            "firstRowAsHeaders": {
+                "name": "Headers From Data",
+                "type": "boolean",
+                "value": true
             }
         }
     }, {
