@@ -243,3 +243,9 @@ width: 16px;
 .table-body t-button[ico]{
 	color:var(--table-body-text-color);
 }
+
+.error {
+	font-size: 16px;
+	text-align: center;
+	margin-top: 10px;
+}

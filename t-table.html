@@ -98,6 +98,9 @@
                         </div>
                     </div>
                 </template>
+
+                <span class="error" hidden$="{{_noData(_dataRows, _parsingFailed)}}">No Data</span>
+                <span class="error" hidden$="{{!_parsingFailed}}">Invalid schema of the input data. It has to be an array of arrays.</span>
             </div>
         </div>
         <div class="paginationController">
@@ -138,7 +141,7 @@
              */
             seedData: {
                 type: Array,
-                observer: '_extractColumnHeaders'
+                observer: '_parseTableStructure'
             },
 
             /**
@@ -168,11 +171,11 @@
             /**
              * Where to take the header names from if the table has
              * to show headers. Either headers are provided in the
-             * markup or in `seedData`. The first value in the array
+             * markup or in data rows. The first value in the array
              * (data) is treated as headers.
              * @type {Boolean}
              */
-            headersFromSeedData: {
+            firstRowAsHeaders: {
                 type: Boolean,
                 value: false
             },
@@ -266,11 +269,12 @@
             _columnHeaders: {
                 type: Array,
                 notify: true,
-                value: []
+                value: function() { return []; }
             },
 
             _columnTemplates: {
-                type: Array
+                type: Array,
+                value: function() { return []; }
             },
 
             _columns: {
@@ -281,8 +285,8 @@
             _dataRows: {
                 type: Array,
                 notify: true,
-                value: [],
-                observer: '_dataRowsChanged'
+                observer: '_dataRowsChanged',
+                value: function() { return []; }
             },
 
             _searchValue: {
@@ -294,42 +298,52 @@
             _previousDetailPanel: String,
 
             _originalDataSet: {
-                type: Array
+                type: Array,
+                value: function() { return []; }
             },
 
             _selectedRow: Object,
 
             _currentScreen: {
                 type: Object,
-                notify: true
+                notify: true,
+                value: function() { return {}; }
             },
 
             _paging: {
                 type: Object,
-                notify: true
+                notify: true,
+                value: function() {
+                    return {
+                        'pageNumber': 1,
+                        'pageSize': 10
+                    };
+                }
             },
 
+            _parsingFailed: {
+                type: Boolean,
+                value: false
+            }
         },
 
         attached: function() {
             var table = this;
-            table._columnTemplates = [];
-            table._paging = {
-                'pageNumber': 1,
-                'pageSize': 10
-            };
-            // table._dataRows=[];
-            table._columnHeaders = [];
-            table._originalDataSet = [];
+
             table.addEventListener('t-paginated', function(eventParams) {
                 table._isProcessing = true;
                 table._loading = true;
                 table._paging = eventParams.detail;
                 table._getPaginatedDisplaySet();
             });
+
             setTimeout(function() {
                 table._domReady();
             }, 0);
+        },
+
+        _noData: function(_dataRows, _parsingFailed) {
+            return Boolean(_dataRows.length) || _parsingFailed;
         },
 
         reload: function() {
@@ -338,8 +352,9 @@
         },
 
         _getPaginatedDisplaySet: function() {
+            var table = this;
+
             if (this._dataRows.length > 0) {
-                var table = this;
                 table._paginatedRecords = [];
                 table._isProcessing = false;
                 table._loading = true;
@@ -347,6 +362,7 @@
                 var end = start + table._paging.pageSize;
                 table._paginatedRecords = table._dataRows.slice(start, end);
             }
+
             if (table._paginatedRecords.length === 0 && table.apiBased) {
                 table.reload();
             }
@@ -541,6 +557,7 @@
         _resetDataSet: function() {
             this._dataRows = this._originalDataSet;
             this._paging.pageNumber = 1;
+            this.$.paginator.pageNumber = 1;
         },
 
         _searchValueChanged: function() {
@@ -572,14 +589,18 @@
         },
 
         _closeSearch: function(e) {
-            this.$.fld_searchbox.classList.remove("toggle");
+            if (!e.target.value.length) {
+                this.$.fld_searchbox.classList.remove("toggle");
+            }
+
             e.preventDefault();
         },
 
         _domReady: function() {
             this._attachedHit = true;
-            this._extractColumnHeaders();
+            this._parseTableStructure();
             this._removeTableStructure();
+
             if (this.apiBased) {
                 this.reload();
 
@@ -590,61 +611,68 @@
             }
         },
 
-        _extractColumnHeaders: function() {
+        _parseTableStructure: function() {
             var columns, tableRows, templates, elem;
 
             if (!this._attachedHit) {
                 return;
             }
 
-            columns = Polymer.dom(this.$.tableformat).getDistributedNodes();
-            columns = Array.prototype.slice.call(columns);
-            this._columnHeaders = [];
+            try {
+                columns = Polymer.dom(this.$.tableformat).getDistributedNodes();
+                columns = Array.prototype.slice.call(columns);
+                this._columnHeaders = [];
 
-            if (this.headersFromSeedData && this.seedData) {
-                this._columns = this.seedData.shift()
-                    .filter(function(colName) {
-                        return colName !== null && colName !== undefined;
-                    })
-                    .map(function(colName, i) {
-                        var column = columns.find(function(col) {
-                            var index = Number(col.dataValue);
+                if (this.firstRowAsHeaders && this.seedData) {
+                    this._columns = this.seedData.shift()
+                        .filter(function(colName) {
+                            return colName !== null && colName !== undefined;
+                        })
+                        .map(function(colName, i) {
+                            var column = columns.find(function(col) {
+                                var index = Number(col.dataValue);
 
-                            // TODO: col.done is a bad idea, use ES6 symbols
-                            return index === i && (col.done = true);
+                                // TODO: col.done is a bad idea, use ES6 symbols
+                                return index === i && (col.done = true);
+                            });
+
+                            column = column || { dataValue: i };
+                            column.displayValue = colName;
+
+                            return column;
                         });
 
-                        column = column || { dataValue: i };
-                        column.displayValue = colName;
+                    columns.forEach(function(col, i) {
+                        if (!col.done) {
+                            this._columns.push(col);
+                        }
 
-                        return column;
-                    });
+                        col.done = undefined;
+                    }.bind(this));
+                } else {
+                    this._columns = columns;
+                }
 
-                columns.forEach(function(col, i) {
-                    if (!col.done) {
-                        this._columns.push(col);
-                    }
+                tableRows = [];
+                templates = Polymer.dom(this.$.templates).getDistributedNodes();
 
-                    col.done = undefined;
+                this._columns.forEach(function(col) {
+                    // this._appendTemplateInShadowDom(col, templates);
+                    this._setColumnHeaders(col);
                 }.bind(this));
-            } else {
-                this._columns = columns;
+
+                if (!this.apiBased && this.seedData) {
+                    this._dataRows = this.seedData;
+                    this._originalDataSet = this._dataRows;
+                }
+
+                this._rerenderTable();
+                this._parsingFailed = false;
+            } catch (e) {
+                this._columns.forEach(this._setColumnHeaders.bind(this));
+                this._dataRows = [];
+                this._parsingFailed = true;
             }
-
-            tableRows = [];
-            templates = Polymer.dom(this.$.templates).getDistributedNodes();
-
-            this._columns.forEach(function(col) {
-                // this._appendTemplateInShadowDom(col, templates);
-                this._setColumnHeaders(col);
-            }.bind(this));
-
-            if (!this.apiBased && this.seedData) {
-                this._dataRows = this.seedData;
-                this._originalDataSet = this._dataRows;
-            }
-
-            this._rerenderTable();
         },
 
         _appendTemplateInShadowDom: function(tableRow, templates) {
@@ -783,10 +811,14 @@
         },
 
         _hideColumn: function(hideOn, isChildRow) {
-            return ((this._currentScreen.isPhone && hideOn.phone === true) || (hideOn.tablet &&
-                    this._currentScreen.isTablet) || (hideOn.all) || (hideOn.smallerDevices &&
-                    (this._currentScreen.isTablet || this._currentScreen.isPhone))) ||
-                isChildRow;
+            return ((this._currentScreen.isPhone && hideOn.phone) ||
+                    (this._currentScreen.isPhone && hideOn.smallerDevices) ||
+
+                    (this._currentScreen.isTablet && hideOn.tablet) ||
+                    (this._currentScreen.isTablet && hideOn.smallerDevices) ||
+
+                    hideOn.all ||
+                    isChildRow);
         },
 
         _onSortableChange: function() {
@@ -815,14 +847,14 @@
         },
 
         _onPhone: function(e) {
-            if (this._currentScreen === undefined) this._currentScreen = Object;
-            this._currentScreen.isPhone = e.detail.value;
+            this._currentScreen = this._currentScreen || {};
+            this.set('_currentScreen.isPhone', e.detail.value);
             this._rerenderTable();
         },
 
         _onTablet: function(e) {
-            if (this._currentScreen === undefined) this._currentScreen = Object;
-            this._currentScreen.isTablet = e.detail.value;
+            this._currentScreen = this._currentScreen || {};
+            this.set('_currentScreen.isTablet', e.detail.value);
             this._rerenderTable();
         },
 
