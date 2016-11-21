@@ -13,6 +13,7 @@
 1. Filterable `string` `No, Auto Apply, Manual`
   1. Filter Details `object`
 1. Multi Select Operations `boolean`
+  1. Multi Select Details `object`
 1. Reorderable `string` `No, Row, Column, Both`
 1. Details Pane `boolean`
   1. Template `object`
