@@ -14,7 +14,7 @@
   1. Filter Details `object`
 1. Multi Select Operations `boolean`
   1. Multi Select Details `object`
-1. Reorderable `string` `No, Row, Column, Both`
+1. Reorderable `string` `No, Row, Column, Both` `row reorder will kill sort, not work unless data write acccess is available, has other issues  about how will the component change its own code`
 1. Details Pane `boolean`
   1. Template `object`
 1. Hoverable `boolean`
