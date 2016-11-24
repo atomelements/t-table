@@ -27,21 +27,24 @@ Note - for add and edit, if any one column contains objects, then only `Via Redi
 
 
 ## List of Subcomponents and their properties
-+
-+- t-column
-+  -editable
-+  -ordering
-+  -searchable
-+  -text-alignment (right, left, center)
-+  
-+- t-table
-+  -sortable
-+  -searchable
-+  -has-header
-+  -filters-applicable
-+  -pagination
-+  -banded rows
-+  -hoverable rows
-+  -reorderable rows
-+  -row selection
 
+
+ 
+### t-table
+- sortable
+- searchable
+- has-header
+- filters-applicable
+- pagination
+- banded rows
+- hoverable rows
+- reorderable rows
+- row selection
+- row deletion
+
+
+### t-column
+- editable
+- ordering
+- searchable
+- text-alignment (right, left, center)
