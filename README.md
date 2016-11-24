@@ -26,7 +26,7 @@
 Note - for add and edit, if any one column contains objects, then only `Via Redirect` option will work in that case for that column.
 
 
-+# List of Subcomponents and their properties
+## List of Subcomponents and their properties
 +
 +- t-column
 +  -editable
