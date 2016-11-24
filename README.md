@@ -25,3 +25,23 @@
 
 Note - for add and edit, if any one column contains objects, then only `Via Redirect` option will work in that case for that column.
 
+
++# List of Subcomponents and their properties
++
++- t-column
++  -editable
++  -ordering
++  -searchable
++  -text-alignment (right, left, center)
++  
++- t-table
++  -sortable
++  -searchable
++  -has-header
++  -filters-applicable
++  -pagination
++  -banded rows
++  -hoverable rows
++  -reorderable rows
++  -row selection
+
