@@ -1,6 +1,6 @@
 #t-table
 
-## List of properties
+## List of properties of main component ( t-table )
 
 1. Data `array` 
 1. Searchable `boolean`
@@ -27,21 +27,6 @@ Note - for add and edit, if any one column contains objects, then only `Via Redi
 
 
 ## List of Subcomponents and their properties
-
-
- 
-### t-table
-- sortable
-- searchable
-- has-header
-- filters-applicable
-- pagination
-- banded rows
-- hoverable rows
-- reorderable rows
-- row selection
-- row deletion
-
 
 ### t-column
 - editable
